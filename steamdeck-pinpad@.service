@@ -1,0 +1,50 @@
+[Unit]
+Description=Steam Deck PIN Pad (%f)
+# Ensure this service starts before game mode, so that Steam will pick up the
+# virtual controller when it starts up
+Before=gamescope-session.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+Restart=on-failure
+RestartSec=5
+# TODO: should there be an option to match the on-screen layout, rather than the numbers?
+# Would probably require a bit of bash logic to work
+ExecStart=bash -c \
+    '/usr/bin/evsieve \
+    --input $(systemd-escape --path --unescape "%i") persist=reopen \
+    # Trigger "out" on keydown, and "back" on keyheld/keyup, to simulate a joystick flick.
+    --map key:kp1:0..1      abs:y:-300 \
+    --map key:kp1:1..0~2    abs:y:0 \
+    --map key:kp2:0..1      abs:x:300 \
+    --map key:kp2:1..0~2    abs:x:0 \
+    --map key:kp3:0..1      abs:y:300 \
+    --map key:kp3:1..0~2    abs:y:0 \
+    --map key:kp4:0..1      abs:x:-300 \
+    --map key:kp4:1..0~2    abs:x:0 \
+    # The above is not needed for button events, which copy their keyup/keydown
+    # events from input to output
+    --map key:kp5           btn:tl2 \
+    --map key:kp6           btn:tr2 \
+    --map key:kp7           btn:tl \
+    --map key:kp8           btn:tr \
+    # For some reason west and north seem to be swapped vs the steam deck buttons:
+    --map key:kp9           btn:west \
+    --map key:kp0           btn:north \
+    # Here we make several fake buttons, so Steam thinks this is a real gamepad. Ideally
+    # these would use actually nonexistent keys for inputs instead of just random Fkeys.
+    --map key:f13           btn:east \
+    --map key:f14           btn:south \
+    --map key:f15           btn:select \
+    --map key:f16           btn:start \
+    --map key:f17           btn:mode \
+    --map key:f18           btn:thumbl \
+    --map key:f19           btn:thumbr \
+    --print btn abs \
+    --output name="Steam Deck PIN Pad ($(basename -a %f | tr "\n" " "))"'
+
+[Install]
+# Only run this service when we are in game mode.
+WantedBy=gamescope-session.service
+
