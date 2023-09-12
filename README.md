@@ -65,13 +65,6 @@ First, identify the keyboard(s) you want to use for the PIN pad.
       > NOTE: `/dev/input/event*` paths are not guaranteed to remain consistent, so
       > so `/by-id/` paths are preferable when possible.
 
-<!--
-   TODO: probably could have some kind of udev rule to detect keyboards automatically
-   and reload accordingly. It would presumably have a +RUN="" that restarted the
-   services accordingly... I guess, at that point it might make more sense to be
-   a non-user service anyway...
--->
-
 Then, for each device you want to use, enable the service for that device:
 
 ```sh
@@ -84,3 +77,18 @@ systemctl --user enable --now steamdeck-pinpad@$devices.service
 To see if it's, working, quit and restart Steam and open controller settings.
 You should see a controller called "Steam Deck PIN Pad" listed there.
 Open up Big Picture and you should be able to use your keyboard for the PIN pad now!
+
+## Caveats / Notes
+
+One thing to keep in mind is that the Steam Deck PIN pad is laid out opposite
+to a typical keyboard number pad:
+
+| PIN Pad | Numpad  |
+|:-------:|:-------:|
+| `1 2 3` | `7 8 9` |
+| `4 5 6` | `4 5 6` |
+| `7 8 9` | `1 2 3` |
+|   `0`   |   `0`   |
+
+This "fake controller" binds the keys according to their number, not their physical
+position on the pads.
